@@ -1,0 +1,112 @@
+<!doctype html>
+
+<head>
+	<meta charset="utf8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<style>
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			margin: 0 auto;
+			max-width: 600px;
+			text-align: center;
+		}
+
+		.login_container {
+			margin-top: 100px;
+			border: 3px solid #f1f1f1;
+			padding: 20px;
+		}
+
+		label {
+			float: left;
+		}
+
+		input[type=text],
+		input[type=password] {
+			width: 100%;
+			padding: 12px 20px;
+			margin: 8px 0;
+			display: inline-block;
+			border: 1px solid #ccc;
+			box-sizing: border-box;
+		}
+
+		button {
+			background-color: #04AA6D;
+			color: #fff;
+			padding: 14px 20px;
+			margin: 8px 0;
+			border: none;
+			cursor: pointer;
+			width: 100%;
+		}
+
+		button:hover {
+			opacity: 0.8;
+		}
+
+		p#error_container {
+			background: #F8D7DA;
+			margin: 10px 0 0 0;
+			padding: 15px 8px;
+			color: #333;
+			border: none;
+			font-size: 0.9rem;
+			font-weight: bold;
+			visibility: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="login_container">
+		<form id="login_form">
+			<label for="username"><b>Username</b></label>
+			<input id="username" class="form_val" type="text" placeholder="Enter username" name="username" required>
+			<br />
+			<label for="password"><b>Password</b></label>
+			<input id="password" class="form_val" type="password" placeholder="Enter password" name="password" required>
+			<br />
+			<button id="login" type="button">Login</button>
+			<p id="error_container"></p>
+		</form>
+	</div>
+
+	<script>
+		const btn = document.getElementById('login')
+		const error_container = document.getElementById('error_container')
+		const form_els = document.getElementsByClassName('form_val')
+
+		document.querySelectorAll('.form_val').forEach(
+			item => item.addEventListener('focus', () => {
+				error_container.style.visibility = 'hidden'
+				error_container.textContent = ''
+			})
+		)
+
+		btn.addEventListener('click', () => {
+			btn.disabled = true
+			let payload = {}
+			for (let i = 0; i < form_els.length; i++) {
+				payload[form_els[i].name] = form_els[i].value
+			}
+			const username = payload.username
+			const xhr = new XMLHttpRequest()
+			xhr.onreadystatechange = () => {
+				if (xhr.readyState == 4 && xhr.status == 200) {
+					const response = JSON.parse(xhr.response)
+					if (response.is_error) {
+						error_container.textContent = response.message
+						error_container.style.visibility = 'visible'
+						btn.disabled = false
+					} else {
+						window.location.href = 'https://' + location.hostname + '/ide/ide.html' + '?c9_token=' + response.data.token + '&username=' + username
+					}
+				}
+			}
+			xhr.open('post', 'https://qadev06.deriv.dev/sso_be/users/login', true)
+			xhr.setRequestHeader('Content-Type', 'application/json')
+			xhr.send(JSON.stringify(payload))
+		})
+	</script>
+</body>
